@@ -1,0 +1,186 @@
+---
+title: "Indian CoronaVirus Status Dashboard"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    social: menu
+    source_code: embed
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(magrittr)
+```
+
+Page 1 
+===================================== 
+Row
+-----------------------------------------------------------------------
+### Chart A{.value-box}
+
+```{r}
+valueBox(value = paste(format(data_set2$Confirmed[1], big.mark = ","), "", sep = " "), 
+         caption = "Total Confirmed Cases", 
+         icon = "fas fa-user-md", 
+         color = confirmed_color)
+```
+
+### Chart A1{.value-box}
+
+```{r}
+valueBox(value = paste(format(data_set2$Active[1], big.mark = ","),"","(",
+               round( (data_set2$Active[1]/data_set2$Confirmed[1])*100, 1), "%)", sep = " "), 
+         caption = "Active Cases", icon = "fas fa-ambulance", 
+         color = active_color)
+```
+
+### Chart A2{.value-box}
+
+```{r}
+
+valueBox(value = paste(format(data_set2$Recovered[1] , big.mark = ","), " (",
+                       round((data_set2$Recovered[1]/data_set2$Confirmed[1])*100, 1), 
+                       "%)", sep = ""), 
+         caption = "Recovered Cases", icon = "fas fa-heartbeat", 
+         color = recovered_color)
+```
+
+### death {.value-box}
+
+```{r}
+
+valueBox(value = paste(format(data_set2$Deaths[1] , big.mark = ","), " (",
+                       round((data_set2$Deaths[1]/data_set2$Confirmed[1])*100, 1), 
+                       "%)", sep = ""),
+         caption = "Death Cases", 
+         icon = "fas fa-frown", 
+         color = death_color)
+```
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+
+### Cases Distribution by Type (`r  max(data_state_daily_r$Date_YMD)`)
+
+```{r}
+
+plotly::plot_ly(
+  data = data_set_tree %>% dplyr::filter(type == "Confirmed" ),
+  type= "treemap",
+  values = ~total,
+  labels= ~ State,
+  parents=  ~type,
+  domain = list(column=0),
+  name = "Confirmed Cases",
+  textinfo="label+value+percent parent",
+  hovertemplate = "State: %{label}<br>Confirmed Cases: %{value}<extra></extra>")%>%
+  plotly::add_trace(
+    data = data_set_tree %>% dplyr::filter(type == "Active"),
+    type= "treemap",
+    values = ~total,
+    labels= ~ State,
+    parents=  ~type,
+    domain = list(column=1),
+    name = "Active",
+    textinfo="label+value+percent parent",
+    hovertemplate = "State: %{label}<br>Active Cases: %{value}<extra></extra>")%>%
+  # plotly::layout(grid=list(columns=4, rows=1))
+  plotly::add_trace(
+    data = data_set_tree %>% dplyr::filter(type == "Recovered"),
+    type= "treemap",
+    values = ~total,
+    labels= ~ State,
+    parents=  ~type,
+    domain = list(column=2),
+    name = "Recovered",
+    textinfo="label+value+percent parent",
+    hovertemplate = "State: %{label}<br>Recovered Cases: %{value}<extra></extra>")%>%
+  plotly::add_trace(
+    data = data_set_tree %>% dplyr::filter(type == "Deaths"),
+    type= "treemap",
+    values = ~total,
+    labels= ~ State,
+    parents=  ~type,
+    domain = list(column=3),
+    name = "Death",
+    textinfo="label+value+percent parent",
+    hovertemplate = "State: %{label}<br>Death Count: %{value}<extra></extra>")%>%
+
+  plotly::layout(grid=list(columns=4, rows=1))
+```
+
+### Active Cases
+
+```{r}
+library(highcharter)
+# Data <- read.csv("https://api.covid19india.org/csv/latest/states.csv",stringsAsFactors =FALSE)%>%
+#             dplyr::mutate(
+#                      State = trimws(State),
+#                      State = factor(State, levels = unique(State))
+# #                )
+# data_State <- Data %>% 
+#   dplyr::group_by(State)
+# %>%
+#   dplyr::summarise(total = sum(Confirmed, na.rm = TRUE),
+#                    .groups = "drop")
+Data <- subset(Data, type == "Active")
+hcmap("https://code.highcharts.com/mapdata/countries/in/in-all.js",
+      data = Data,
+      name="Active Case",
+      value = "total",
+      joinBy = c("name","State"))%>%
+  hc_title(text = "India")
+```
+
+### Daily Cases
+```{r}
+library(plotly)
+library(ggplot2)
+
+fig <- plot_ly(
+  type = "scatter",
+  x = data_state_daily_c$Date_YMD, 
+  y = data_state_daily_c$TT,
+  name = 'Confirmed Cases',
+  mode = "markers",
+  hovertemplate = "Confirmed Cases: %{y}<extra></extra>"
+)%>%
+  plotly::add_trace(
+  type = "scatter",
+  y = data_state_daily_r$TT,
+  name = 'Recovered Cases',
+  mode = "markers",
+  hovertemplate = "Recovered Cases: %{y}<extra></extra>")%>%
+  plotly::add_trace(
+  type = "scatter",
+  y = data_state_daily_d$TT,
+  name = 'Death Cases',
+  mode = "markers",
+  hovertemplate = "Death Cases: %{y}<extra></extra>")
+ fig %>%
+  plotly::layout(
+    title = "",
+    yaxis = list(title = "Number of Cases"),
+    xaxis = list(
+      title="Date",
+      type = "date",
+      range=c('2020-03-14', max(data_state_daily_r$Date_YMD))
+      # hovermode = "compare"
+    ),
+    hovermode = "x"
+  )
+```
+
+
+Page 2
+===================================== 
+
+Row
+-----------------------------------------------------------------------
+
+###hi
+```{r}
+
+```
